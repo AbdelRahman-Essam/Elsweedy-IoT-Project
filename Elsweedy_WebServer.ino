@@ -63,6 +63,7 @@ void Setup(void)
 {
   Serial.begin(115200);
   pinMode(LED, OUTPUT);
+  pinMode(ResetOutSignal, OUTPUT);
   pinMode(button1.PIN, INPUT_PULLUP); // agreed
   pinMode(ResetButtonPin, INPUT_PULLUP);
   pinMode(AccessPointPin, INPUT_PULLUP);
@@ -100,10 +101,7 @@ void connectWifi()
   // Wait for connection
   while (WiFi.status() != WL_CONNECTED)
   {
-    if (readStringFromFlash(100) == "1")
-      {
-        Gen_access_point();
-      }
+    button_Click();
     Serial.print(".");
     delay(500);
   }
@@ -152,14 +150,6 @@ void interpt()
 void button_Click()
 {
   Serial.println("Inside Button_Click");
-//  if ( !digitalRead(ResetButtonPin) ) {
-//    delay(4000);
-//    if ( !digitalRead(ResetButtonPin) ) {
-//      Serial.println("Inside Button_Click_Reset_Loop");
-//      Serial.println("ResetButton clicked");
-//      resetCounter();
-//    }
-//  }
   if ( !digitalRead(AccessPointPin) ) {
     delay(4000);
     if ( !digitalRead(AccessPointPin) ) {
@@ -193,7 +183,7 @@ void handleSeverClient()
             client.println();
 
             if (header.indexOf("GET /reset") >= 0) {
-              resetCounter();
+              ResetFlag=1;
             }
             client.println(returnHtml(SensorValue));
             break;
@@ -225,7 +215,9 @@ void resetCounter()
     Serial.println("Reset Button Clicked");
     sendData("value=" + String(SensorValue));
     SensorValue = 0;
+    digitalWrite(ResetOutSignal,HIGH);
     Serial.println("new value posted");
+    ResetFlag=0;
   }
 }
 void Gen_access_point()
